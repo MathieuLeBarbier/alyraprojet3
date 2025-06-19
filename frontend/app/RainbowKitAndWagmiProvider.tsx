@@ -21,7 +21,7 @@ import Layout from '@/components/shared/Layout';
 
 const config = getDefaultConfig({
   appName: 'Voting DApp',
-  projectId: "292b16d6b77610bdf9bcde983fa3ea4d" || '',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   chains: [hardhat, sepolia], 
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
@@ -31,7 +31,6 @@ const queryClient = new QueryClient();
 const RainbowKitAndWagmiProvider = ({children} : {children: React.ReactNode }) => {
   return (
     <WagmiProvider config={config}>
-
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           {children}
