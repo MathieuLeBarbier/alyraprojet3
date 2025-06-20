@@ -27,26 +27,6 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     account: address,
   })
 
-  const { data: voterInfo, isPending: voterIsPending, refetch: refetchVoter } = useReadContract({
-    address: contractAddress,
-    abi: contractABI,
-    functionName: 'getVoter',
-    args: [address],
-    account: address,
-    query: {
-      enabled: !!address,
-    }
-  })
-
-  const { data: winningProposalId, isPending: winningIsPending, refetch: refetchWinning } = useReadContract({
-    address: contractAddress,
-    abi: contractABI,
-    functionName: 'winningProposalID',
-    query: {
-      enabled: !!address,
-    }
-  })
-
   const changeStatus = async () => {
     writeContract({
       address: contractAddress,
@@ -72,20 +52,10 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refetch = async () => {
     await refetchWorkflow();
-    await refetchVoter();
-    await refetchWinning();
   }
 
   useEffect(() => {
-    console.log("Fetching contract data...");
-    console.log("Contract address:", contractAddress);
-    console.log("User address:", address);
-    
-    refetch().then(() => {
-      console.log("Data fetched, workflow status:", workflowStatus);
-    }).catch(err => {
-      console.error("Error fetching data:", err);
-    });
+    refetch();
   }, [address, isConfirming]);
 
   const exposed = {
@@ -98,12 +68,6 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     workflowStatus,
     workflowIsPending,
     refetchWorkflow,
-    voterInfo,
-    voterIsPending,
-    refetchVoter,
-    winningProposalId,
-    winningIsPending,
-    refetchWinning,
     write,
     refetch,
     changeStatus
