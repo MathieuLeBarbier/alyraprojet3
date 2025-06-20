@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Test NextJS Build
+    name: NextJS Build
     runs-on: ubuntu-latest
     defaults:
       run:
