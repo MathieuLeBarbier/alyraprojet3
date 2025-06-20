@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import RainbowKitAndWagmiProvider from "./RainbowKitAndWagmiProvider";
 import Layout from "@/components/shared/Layout";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,15 @@ export default function RootLayout({
             {children}
           </Layout>
         </RainbowKitAndWagmiProvider>
+        <Toaster 
+          position="bottom-right" 
+          toastOptions={{
+            duration: 5000,
+            style: {
+              backgroundColor: "#262626",
+              color: '#fff',
+            },
+          }} />
       </body>
     </html>
   );
