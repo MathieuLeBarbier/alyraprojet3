@@ -20,11 +20,10 @@ import {
   SortingState,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Check, Crown } from 'lucide-react';
 import { useContract } from '@/contexts/useContract';
 import { useReadContracts } from 'wagmi';
 import { contractAddress, contractABI } from "@/app/constants/index";
-import { Check } from "lucide-react";
 
 type Proposal = {
   id: number;
@@ -44,6 +43,13 @@ function ProposalTable() {
   const [loading, setLoading] = useState(true);
   const [totalProposals, setTotalProposals] = useState(0);
   
+  const getWinningProposalId = () => {
+    if (!proposals.length) return -1;
+    return proposals.reduce((maxId, current, idx, arr) => 
+      current.voteCount > arr[maxId].voteCount ? idx : maxId, 0
+    );
+  };
+
   const columns: ColumnDef<Proposal>[] = [
     {
       accessorKey: 'id',
@@ -53,7 +59,20 @@ function ProposalTable() {
     {
       accessorKey: 'description',
       header: "Description",
-      cell: ({ row }) => <div>{row.getValue('description')}</div>
+      cell: ({ row }) => {
+        const isWinner = proposals.length > 0 && 
+          row.original.voteCount === Math.max(...proposals.map(p => p.voteCount)) &&
+          row.original.voteCount > 0;
+        
+        return (
+          <div className="flex items-center">
+            {isWinner && (
+              <Crown className="h-4 w-4 mr-1 text-secondary" />
+            )}
+            <span>{row.getValue('description')}</span>
+          </div>
+        );
+      }
     },
     {
       accessorKey: 'voteCount',
@@ -145,6 +164,7 @@ function ProposalTable() {
         <div>
           <CardTitle className="text-2xl">Proposals</CardTitle>
           <CardDescription>
+            {workflowStatus === 0 && "Proposals registration not started"}
             {workflowStatus === 1 && "Submit your proposal"}
             {workflowStatus === 2 && "Proposals registration ended"}
             {workflowStatus === 3 && "Vote for your favorite proposal"}
@@ -181,15 +201,24 @@ function ProposalTable() {
                 </TableHeader>
                 <TableBody>
                   {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
+                    table.getRowModel().rows.map((row) => {
+                      const isWinner = proposals.length > 0 && 
+                        row.original.voteCount === Math.max(...proposals.map(p => p.voteCount)) &&
+                        row.original.voteCount > 0;
+                      
+                      return (
+                        <TableRow 
+                          key={row.id}
+                          className={isWinner ? "bg-[var(--accent-secondary)] text-secondary font-bold hover:bg-[var(--accent-secondary)]" : ""}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      )
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={columns.length} className="text-center">

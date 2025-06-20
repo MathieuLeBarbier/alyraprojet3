@@ -54,7 +54,7 @@ function VotersTable() {
       accessorKey: 'hasVoted',
       header: "Voting Status",
       cell: ({ row }) => (
-        <div className={row.getValue('hasVoted') ? 'text-green-500' : 'text-yellow-500'}>
+        <div className={row.getValue('hasVoted') ? 'text-[var(--accent-secondary)]' : 'text-red-400'}>
           {row.getValue('hasVoted') ? 'Voted' : 'Not Voted'}
         </div>
       ),
@@ -76,13 +76,13 @@ function VotersTable() {
     const mockVoters = [
       { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
       { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
+      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
+      { address: '0x1234...5678', isRegistered: true, hasVoted: false, votedProposalId: 2 },
       { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
+      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
+      { address: '0x1234...5678', isRegistered: true, hasVoted: false, votedProposalId: 2 },
       { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
+      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
       { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
       { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
       { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
@@ -123,7 +123,9 @@ function VotersTable() {
               View all the voters of the contract
             </CardDescription>
           </div>
-          <div className="ml-auto text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full px-3 py-1">
+          <div className={cn("ml-auto text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full px-3 py-1", {
+            'bg-red-400': voters.length / 2 > voters.filter((voter) => voter.hasVoted).length,
+          })}>
             Vote: {voters.filter((voter) => voter.hasVoted).length} / {voters.length}
           </div>
         </CardHeader>
