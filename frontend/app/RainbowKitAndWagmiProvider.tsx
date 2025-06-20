@@ -1,23 +1,10 @@
 'use client';
 
-
 import '@rainbow-me/rainbowkit/styles.css';
-import {
-  getDefaultConfig,
-  RainbowKitProvider,
-} from '@rainbow-me/rainbowkit';
+import {getDefaultConfig, RainbowKitProvider} from '@rainbow-me/rainbowkit';
 import { WagmiProvider } from 'wagmi';
-import {
-  hardhat,
-  sepolia
-} from 'wagmi/chains';
-import {
-  QueryClientProvider,
-  QueryClient,
-} from "@tanstack/react-query";
-import Layout from '@/components/shared/Layout';
-
-
+import { hardhat, sepolia } from 'wagmi/chains';
+import {QueryClientProvider, QueryClient} from "@tanstack/react-query";
 
 const config = getDefaultConfig({
   appName: 'Voting DApp',
