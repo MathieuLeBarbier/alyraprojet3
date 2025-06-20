@@ -27,6 +27,13 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     account: address,
   })
 
+  const { data: contractOwner, isPending: ownerIsPending, refetch: refetchOwner } = useReadContract({
+    address: contractAddress,
+    abi: contractABI,
+    functionName: 'owner',
+    account: address,
+  })
+
   const changeStatus = async () => {
     writeContract({
       address: contractAddress,
@@ -54,6 +61,10 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     await refetchWorkflow();
   }
 
+  const isOwner = () => {
+    return contractOwner === address;
+  }
+
   useEffect(() => {
     refetch();
   }, [address, isConfirming]);
@@ -70,7 +81,8 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     refetchWorkflow,
     write,
     refetch,
-    changeStatus
+    changeStatus,
+    isOwner
   };
 
   return (

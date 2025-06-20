@@ -2,13 +2,13 @@
 
 import useHiddenNav from "@/hooks/useHiddenNav";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import Image from "next/image";
 import Link from "next/link";
 import { getWorkflowStatusName } from "@/lib/utils";
 import { useContract } from "@/contexts/useContract";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
-  const { workflowStatus } = useContract();
+  const { workflowStatus, workflowIsPending, isOwner, changeStatus } = useContract();
   const { hidden } = useHiddenNav();
 
   return (
@@ -19,11 +19,23 @@ const Header = () => {
             <h1 className="text-2xl font-bold">Voting</h1>
           </Link>
         </div>
-        <div className="text-secondary font-bold text-sm bg-[var(--accent-secondary)] px-3 py-1 rounded-full">
-            {`Status: ${workflowStatus ? getWorkflowStatusName(Number(workflowStatus)) : 'Loading...'}`}
+        <div className="flex flex-row items-center gap-2">
+          <div className="text-secondary font-bold text-sm bg-primary px-3 py-1 rounded-full">
+              {`Status: ${workflowIsPending ? 'Loading...' : getWorkflowStatusName(Number(workflowStatus))}`}
           </div>
+          { isOwner() && (
+            <Button 
+            size="sm" 
+            className="rounded-full bg-[var(--accent-secondary)] text-secondary" 
+            onClick={() => changeStatus()}
+            disabled={workflowIsPending}
+            >
+              Next
+            </Button>
+          )}
+        </div>
         <div>
-          <ConnectButton />
+          <ConnectButton/>
         </div>
       </div>
     </nav>
