@@ -3,10 +3,9 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   
   return (
-    <div className="pb-6">
-      <footer className="py-4 px-6 bg-accent rounded-3xl mx-8 sm:mx-16 xl:mx-56 text-white">
+    <div className="w-full max-w-5xl mx-auto pb-6">
+      <footer className="py-4 px-6 bg-accent rounded-3xl text-white">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          {/* Logo and copyright */}
           <div className="mb-4 md:mb-0">
             <div className="font-medium">Voting DApp - Alyra Project</div>
             <p className="text-sm">© {currentYear} All rights reserved</p>

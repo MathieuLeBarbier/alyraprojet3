@@ -32,7 +32,7 @@ type Voter = {
   votedProposalId: number;
 };
 
-const Voting = () => {
+function VotersTable() {
   const { isOwner, workflowStatus } = useContract();
   const [voters, setVoters] = useState<Voter[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -200,4 +200,4 @@ const Voting = () => {
   );
 };
 
-export default Voting;
+export default VotersTable;

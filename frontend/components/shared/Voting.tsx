@@ -1,10 +1,12 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import VotersTable from './voters/VotersTable';
+import ProposalTable from './proposals/ProposalTable';
 
 const Voting = () => {
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-4">
+    <div className="container mx-auto space-y-6 flex flex-col items-center">
+      <ProposalTable />
       <VotersTable />
     </div>
   )
