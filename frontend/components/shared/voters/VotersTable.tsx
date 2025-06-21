@@ -87,11 +87,15 @@ function VotersTable() {
               View all the voters of the contract
             </CardDescription>
           </div>
-          <div className={cn("ml-auto text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full px-3 py-1", {
-            'bg-red-400': (voters?.length || 0) / 2 > (voters?.filter((voter: Voter) => voter.hasVoted).length || 0),
-          })}>
-            Vote: {voters?.filter((voter: Voter) => voter.hasVoted).length || 0} / {voters?.length || 0}
-          </div>
+          {
+            workflowStatus > 3 && (
+              <div className={cn("ml-auto text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full px-3 py-1", {
+                'bg-red-400': (voters?.length || 0) / 2 > (voters?.filter((voter: Voter) => voter.hasVoted).length || 0),
+              })}>
+                Vote: {voters?.filter((voter: Voter) => voter.hasVoted).length || 0} / {voters?.length || 0}
+              </div>
+            )
+          }
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">

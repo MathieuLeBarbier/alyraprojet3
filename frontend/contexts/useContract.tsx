@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteCont
 import { contractAddress, contractABI } from "@/app/constants/index";
 import useContractEvent from "@/hooks/useContractEvent";
 import { Voter } from "@/lib/types/voter";
+import { publicClient } from "@/utils/client";
 
 const ContractContext = createContext<any>(null);
 
@@ -44,16 +45,44 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [voters, setVoters] = useState<Voter[]>([]);
 
-  useEffect(() => {
-    setVoters(voterRegisteredEvents.map((voter: string) => {
-      // TODO: Fetch the voter from the contract
+  /**
+   * Fetch the voter details from the contract
+   * @param {string} voterAddress The address of the voter
+   * @returns {Promise<Voter>} The voter details
+  */
+  const fetchVoterDetails = useCallback(async (voterAddress: string): Promise<Voter> => {
+    try {
+      const voterData = await publicClient.readContract({
+        address: contractAddress,
+        abi: contractABI,
+        functionName: 'getVoter',
+        args: [voterAddress],
+        account: address,
+      }) as any;
+      
       return {
-        address: voter,
+        address: voterAddress,
+        isRegistered: voterData[0],
+        hasVoted: voterData[1],
+        votedProposalId: Number(voterData[2])
+      };
+    } catch (error) {
+      console.error(`Error fetching voter ${voterAddress}:`, error);
+      return {
+        address: voterAddress,
         isRegistered: true,
         hasVoted: false,
         votedProposalId: 0
-      }
-    }));
+      };
+    }
+  }, [address]);
+
+  useEffect(() => {
+    const fetchVoters = async () => {
+      const voters = await Promise.all(voterRegisteredEvents.map(fetchVoterDetails));
+      setVoters(voters);
+    };
+    fetchVoters();
   }, [voterRegisteredEvents]);
 
   /** 
