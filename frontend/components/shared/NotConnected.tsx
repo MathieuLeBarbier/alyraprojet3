@@ -4,7 +4,7 @@ import Image from "next/image"
 
 const NotConnected = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
+    <div className="flex flex-col items-center justify-center h-screen -mt-26">
       <Alert variant="default" className="flex flex-col items-center justify-between gap-2">
         <Image src="/LOGO_white.svg" alt="Logo" width={32} height={32} className="h-10 sm:h-12 w-24 object-contain" priority />
         <>

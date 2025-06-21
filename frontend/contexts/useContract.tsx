@@ -34,21 +34,13 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     account: address,
   })
 
-  const changeStatus = async () => {
-    writeContract({
-      address: contractAddress,
-      abi: contractABI,
-      functionName: 'startProposalsRegistering',
-    })
-  }
-
   /** 
    * Write a contract function
    * @param {string} functionName The function name to call
    * @param {any[]} args The function arguments
    * @returns {Promise<void>} The promise of the transaction
   */
-  const write = async (functionName: string, args: any[]) => {
+  const write = async (functionName: string, args: any[] = []) => {
     writeContract({
       address: contractAddress,
       abi: contractABI,
@@ -57,12 +49,44 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     })
   }
 
+  /**
+   * Change the status of the contract
+   * @returns {Promise<void>} The promise of the transaction
+  */
+  const changeStatus = async () => {
+    if (workflowStatus === 0) {
+      write('startProposalsRegistering')
+    } else if (workflowStatus === 1) {
+      write('endProposalsRegistering')
+    } else if (workflowStatus === 2) {
+      write('startVotingSession')
+    } else if (workflowStatus === 3) {
+      write('endVotingSession')
+    }
+  }
+
+  /**
+   * Refetch the contract data
+   * @returns {Promise<void>} The promise of the refetch
+  */
   const refetch = async () => {
     await refetchWorkflow();
   }
 
+  /**
+   * Check if the user is the owner of the contract
+   * @returns {boolean} True if the user is the owner of the contract, false otherwise
+  */
   const isOwner = () => {
     return contractOwner === address;
+  }
+
+  /**
+   * Check if the contract is ready to tally
+   * @returns {boolean} True if the contract is ready to tally, false otherwise
+  */
+  const readyToTally = () => {
+    return workflowStatus === 4;
   }
 
   useEffect(() => {
@@ -82,7 +106,8 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     write,
     refetch,
     changeStatus,
-    isOwner
+    isOwner,
+    readyToTally,
   };
 
   return (

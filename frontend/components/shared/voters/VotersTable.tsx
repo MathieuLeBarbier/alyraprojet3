@@ -170,8 +170,8 @@ function VotersTable() {
             </Table>
           </div>
           <div className={cn(
-            "flex items-center space-x-2 py-4 justify-between", {
-            'justify-end': !isOwner(),
+            "flex items-center space-x-2 py-4 justify-end", {
+            'justify-between': isOwner() && workflowStatus === 0,
           })}>
             {isOwner() && workflowStatus === 0 && (
               <AddVoterDialog />
