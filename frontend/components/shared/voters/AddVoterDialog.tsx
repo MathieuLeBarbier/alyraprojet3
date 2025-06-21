@@ -9,22 +9,30 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useContract } from "@/contexts/useContract";
 
 function AddVoterDialog() {
+  const [open, setOpen] = useState(false);
+  
   const [newVoterAddress, setNewVoterAddress] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const { addVoter, isPending, isConfirming, isSuccess, error } = useContract();
 
-  const handleAddVoter = () => {
-    console.log(newVoterAddress);
-    setNewVoterAddress("");
-    setIsOpen(false);
+  useEffect(() => {
+    if (isSuccess) {
+      setNewVoterAddress("");
+      setOpen(false);
+    }
+  }, [isSuccess]);
+
+  const handle = async () => {
+    await addVoter(newVoterAddress);
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open}>
       <DialogTrigger asChild>
-        <Button variant="outline" >
+        <Button variant="outline" onClick={() => setOpen(true)}>
           + Add Voter
         </Button>
       </DialogTrigger>
@@ -32,7 +40,7 @@ function AddVoterDialog() {
         <DialogHeader>
           <DialogTitle>Add New Voter</DialogTitle>
           <DialogDescription>
-            Enter the address
+            Enter the address of the voter you want to register
           </DialogDescription>
         </DialogHeader>
         <Input
@@ -40,19 +48,23 @@ function AddVoterDialog() {
           placeholder="0x..."
           value={newVoterAddress}
           onChange={(e) => setNewVoterAddress(e.target.value)}
+          disabled={isPending || isConfirming}
         />
         <DialogFooter>
-          <Button type="submit" 
-            onClick={handleAddVoter} 
-            disabled={newVoterAddress.trim() === ""}
+          <Button 
+            type="submit" 
+            onClick={() => handle()} 
+            disabled={isPending || isConfirming || newVoterAddress.trim() === ""}
             className="w-full bg-[var(--accent-secondary)] text-secondary"
           >
-            Add
+            {isPending && "Adding..."}
+            {isConfirming && "Confirming..."}
+            {!isPending && !isConfirming && "Add"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export default AddVoterDialog;

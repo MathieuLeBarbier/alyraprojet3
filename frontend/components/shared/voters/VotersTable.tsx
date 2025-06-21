@@ -24,18 +24,14 @@ import { ArrowUpDown } from 'lucide-react';
 import { useContract } from '@/contexts/useContract';
 import { cn } from '@/lib/utils';
 import AddVoterDialog from './AddVoterDialog';
-
-type Voter = {
-  address: string;
-  isRegistered: boolean;
-  hasVoted: boolean;
-  votedProposalId: number;
-};
+import { Voter } from '@/lib/types/voter';
 
 function VotersTable() {
-  const { isOwner, workflowStatus } = useContract();
-  const [voters, setVoters] = useState<Voter[]>([]);
+  const { isOwner, workflowStatus, voters } = useContract();
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Call isOwner once to avoid multiple function calls during render
+  const isOwnerResult = isOwner();
 
   const columns: ColumnDef<Voter>[] = [
     {
@@ -70,40 +66,8 @@ function VotersTable() {
     },
   ];
 
-  // Mock function to fetch voters (replace with actual blockchain interaction)
-  const fetchVoters = async () => {
-    // Replace this with actual blockchain data fetching
-    const mockVoters = [
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: false, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: false, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: false, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
-      { address: '0x1234...5678', isRegistered: true, hasVoted: true, votedProposalId: 2 },
-      { address: '0xabcd...efgh', isRegistered: true, hasVoted: false, votedProposalId: 0 },
-      { address: '0x8765...4321', isRegistered: true, hasVoted: true, votedProposalId: 1 },
-      
-      // Add more mock data as needed
-    ];
-    setVoters(mockVoters);
-  };
-
-  useEffect(() => {
-    fetchVoters();
-  }, []);
-
   const table = useReactTable({
-    data: voters,
+    data: voters || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -124,9 +88,9 @@ function VotersTable() {
             </CardDescription>
           </div>
           <div className={cn("ml-auto text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full px-3 py-1", {
-            'bg-red-400': voters.length / 2 > voters.filter((voter) => voter.hasVoted).length,
+            'bg-red-400': (voters?.length || 0) / 2 > (voters?.filter((voter: Voter) => voter.hasVoted).length || 0),
           })}>
-            Vote: {voters.filter((voter) => voter.hasVoted).length} / {voters.length}
+            Vote: {voters?.filter((voter: Voter) => voter.hasVoted).length || 0} / {voters?.length || 0}
           </div>
         </CardHeader>
         <CardContent>
@@ -171,9 +135,9 @@ function VotersTable() {
           </div>
           <div className={cn(
             "flex items-center space-x-2 py-4 justify-end", {
-            'justify-between': isOwner() && workflowStatus === 0,
+            'justify-between': isOwnerResult && workflowStatus === 0,
           })}>
-            {isOwner() && workflowStatus === 0 && (
+            {isOwnerResult && workflowStatus === 0 && (
               <AddVoterDialog />
             )}
             <div className="flex items-center space-x-2">

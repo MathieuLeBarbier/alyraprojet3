@@ -3,7 +3,7 @@
 import useHiddenNav from "@/hooks/useHiddenNav";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import { getWorkflowStatusName } from "@/lib/utils";
+import { getWorkflowStatusName } from "@/lib/workflowStatusParser";
 import { useContract } from "@/contexts/useContract";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
