@@ -30,8 +30,6 @@ function VotersTable() {
   const { isOwner, workflowStatus, voters } = useContract();
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Call isOwner once to avoid multiple function calls during render
-  const isOwnerResult = isOwner();
 
   const columns: ColumnDef<Voter>[] = [
     {
@@ -139,9 +137,9 @@ function VotersTable() {
           </div>
           <div className={cn(
             "flex items-center space-x-2 py-4 justify-end", {
-            'justify-between': isOwnerResult && workflowStatus === 0,
+            'justify-between': isOwner() && workflowStatus === 0,
           })}>
-            {isOwnerResult && workflowStatus === 0 && (
+            {isOwner() && workflowStatus === 0 && (
               <AddVoterDialog />
             )}
             <div className="flex items-center space-x-2">

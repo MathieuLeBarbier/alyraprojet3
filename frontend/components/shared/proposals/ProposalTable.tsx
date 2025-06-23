@@ -22,18 +22,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Check, Crown } from 'lucide-react';
 import { useContract } from '@/contexts/useContract';
-import { useReadContracts } from 'wagmi';
-import { contractAddress, contractABI } from "@/app/constants/index";
-
-type Proposal = {
-  id: number;
-  description: string;
-  voteCount: number;
-};
+import { cn } from '@/lib/utils';
+import AddProposalDialog from './AddProposalDialog';
+import { Proposal } from '@/lib/types/proposal';
+import { useAccount } from 'wagmi';
+import { Voter } from '@/lib/types/voter';
 
 function ProposalTable() {
-  const { write, isOwner, workflowStatus } = useContract();
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const { write, isVoter, workflowStatus, proposals: proposalsFromContext, currentUserVoteInfo } = useContract();
+  const proposals: Proposal[] = proposalsFromContext || [];
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: 'voteCount',
@@ -42,32 +39,25 @@ function ProposalTable() {
   ]);
   const [loading, setLoading] = useState(true);
   const [totalProposals, setTotalProposals] = useState(0);
-  
-  const getWinningProposalId = () => {
-    if (!proposals.length) return -1;
-    return proposals.reduce((maxId, current, idx, arr) => 
-      current.voteCount > arr[maxId].voteCount ? idx : maxId, 0
-    );
-  };
 
   const columns: ColumnDef<Proposal>[] = [
     {
       accessorKey: 'id',
       header: "ID",
-      cell: ({ row }) => <div>#{row.getValue('id')}</div>
+      cell: ({ row }) => <div>#{String(row.getValue('id'))}</div>
     },
     {
       accessorKey: 'description',
       header: "Description",
       cell: ({ row }) => {
         const isWinner = proposals.length > 0 && 
-          row.original.voteCount === Math.max(...proposals.map(p => p.voteCount)) &&
+          Number(row.original.voteCount) === Math.max(...proposals.map((p: Proposal) => Number(p.voteCount))) &&
           row.original.voteCount > 0;
         
         return (
           <div className="flex items-center">
             {isWinner && (
-              <Crown className="h-4 w-4 mr-1 text-secondary" />
+              <Crown className="h-4 w-4 mr-1 text-[var(--accent-secondary)]" />
             )}
             <span>{row.getValue('description')}</span>
           </div>
@@ -85,21 +75,32 @@ function ProposalTable() {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="text-right">{row.getValue('voteCount')}</div>,
+      cell: ({ row }) => <div className="text-right">{String(row.getValue('voteCount'))}</div>,
     },
     {
       id: 'actions',
       cell: ({ row }) => {
-        return workflowStatus === 3 ? (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="ml-auto flex items-center gap-1"
-            onClick={() => handleVote(row.getValue('id'))}
-          >
-            <Check className="h-4 w-4" /> Vote
-          </Button>
-        ) : null;
+        if (workflowStatus === 3 && isVoter()) {
+          if (currentUserVoteInfo.votedProposalId === row.original.id) {
+            return <div className="text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full"><Check className="h-4 w-4" /></div>;
+          } 
+
+          if (currentUserVoteInfo.hasVoted) {
+            return null;
+          }
+
+          return (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className={cn("ml-auto flex items-center gap-1")}
+                onClick={() => handleVote(row.getValue('id'))}
+              >
+                <Check className="h-4 w-4" /> Vote
+              </Button>
+            );
+        }
+        return null;
       }
     }
   ];
@@ -107,47 +108,14 @@ function ProposalTable() {
   const handleVote = async (proposalId: number) => {
     try {
       await write('setVote', [proposalId]);
-      // Refresh proposal data after voting
-      fetchProposals();
+
     } catch (err) {
       console.error("Failed to vote:", err);
     }
   };
 
-  const fetchProposals = async () => {
-    setLoading(true);
-    try {
-      // Using mock data instead of contract calls
-      const mockProposals = [
-        { id: 0, description: "GENESIS", voteCount: 0 },
-        { id: 1, description: "Build a community center", voteCount: 5 },
-        { id: 2, description: "Create a decentralized voting app", voteCount: 12 },
-        { id: 3, description: "Fund open source development", voteCount: 8 },
-        { id: 4, description: "Host a blockchain hackathon", voteCount: 3 },
-        { id: 5, description: "Develop educational materials", voteCount: 7 },
-        { id: 6, description: "Create a DAO treasury", voteCount: 2 },
-        { id: 7, description: "Launch community NFT collection", voteCount: 4 }
-      ];
-      
-      setProposals(mockProposals);
-      setTotalProposals(mockProposals.length);
-      
-      // Simulate loading delay
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error("Error with mock proposals:", error);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProposals();
-  }, [workflowStatus]);
-
   const table = useReactTable({
-    data: proposals,
+    data: proposals || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -157,6 +125,12 @@ function ProposalTable() {
       sorting,
     },
   });
+
+  // Update total proposals count when proposals change
+  useEffect(() => {
+    setTotalProposals(proposals?.length || 0);
+    setLoading(false);
+  }, [proposals]);
 
   return (
     <Card className="w-full max-w-5xl">
@@ -203,13 +177,17 @@ function ProposalTable() {
                   {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => {
                       const isWinner = proposals.length > 0 && 
-                        row.original.voteCount === Math.max(...proposals.map(p => p.voteCount)) &&
+                        Number(row.original.voteCount) === Math.max(...proposals.map((p: Proposal) => Number(p.voteCount))) &&
                         row.original.voteCount > 0;
+
+                      const hasVotedForThis = currentUserVoteInfo?.hasVoted && currentUserVoteInfo.votedProposalId === row.original.id;
                       
                       return (
                         <TableRow 
                           key={row.id}
-                          className={isWinner ? "bg-[var(--accent-secondary)] text-secondary font-bold hover:bg-[var(--accent-secondary)]" : ""}
+                          className={cn(
+                            { "bg-muted/50": hasVotedForThis && !isWinner }
+                          )}
                         >
                           {row.getVisibleCells().map((cell) => (
                             <TableCell key={cell.id}>
@@ -229,28 +207,34 @@ function ProposalTable() {
                 </TableBody>
               </Table>
             </div>
-            <div className="flex items-center space-x-2 py-4 justify-end">
-              <div className="flex items-center space-x-2">
-                {table.getCanPreviousPage() && (
-                  <Button
-                    variant="outline"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    Previous
-                  </Button>
-                )}
-                {table.getCanNextPage() && (
-                  <Button
-                    variant="outline"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    Next
-                  </Button>
-                )}
-              </div>
+            <div className={cn(
+            "flex items-center space-x-2 py-4 justify-end", {
+            'justify-between': isVoter() && workflowStatus === 1,
+          })}>
+            {isVoter() && workflowStatus === 1 && (
+              <AddProposalDialog />
+            )}
+            <div className="flex items-center space-x-2">
+              {table.getCanPreviousPage() && (
+                <Button
+                  variant="outline"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              )}
+              {table.getCanNextPage() && (
+                <Button
+                  variant="outline"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  Next
+                </Button>
+              )}
             </div>
+          </div>
           </>
         )}
       </CardContent>

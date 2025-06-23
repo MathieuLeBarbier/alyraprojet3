@@ -5,11 +5,13 @@ import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteCont
 import { contractAddress, contractABI } from "@/app/constants/index";
 import useContractEvent from "@/hooks/useContractEvent";
 import { Voter } from "@/lib/types/voter";
+import { Proposal } from "@/lib/types/proposal";
 import { publicClient } from "@/utils/client";
 
 const ContractContext = createContext<any>(null);
 
 const voterRegisteredEventABI = 'event VoterRegistered(address voter)';
+const proposalAddedEventABI = 'event ProposalRegistered(uint proposalId)';
 
 /**
  * ContractProvider component
@@ -24,6 +26,8 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     useWaitForTransactionReceipt({
       hash
     })
+
+  const [currentUserVoteInfo, setCurrentUserVoteInfo] = useState<Voter | null>(null);
 
   const { data: workflowStatus, isPending: workflowIsPending, refetch: refetchWorkflow } = useReadContract({
     address: contractAddress,
@@ -43,7 +47,34 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     return log.args.voter;
   })
 
+  const { events: proposalAddedEvents, refetch: refetchProposalEvents } = useContractEvent(contractAddress, proposalAddedEventABI, (log: any) => {
+    return log.args.proposalId;
+  })
+
   const [voters, setVoters] = useState<Voter[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+
+  const fetchCurrentUserVoteInfo = useCallback(async () => {
+    if (!address) return;
+    try {
+      const voterData = await publicClient.readContract({
+        address: contractAddress,
+        abi: contractABI,
+        functionName: 'getVoter',
+        args: [address],
+        account: address,
+      }) as any;
+      
+      setCurrentUserVoteInfo({
+        address: address,
+        isRegistered: voterData.isRegistered,
+        hasVoted: voterData.hasVoted,
+        votedProposalId: Number(voterData.votedProposalId)
+      });
+    } catch (e) {
+      setCurrentUserVoteInfo(null);
+    }
+  }, [address]);
 
   /**
    * Fetch the voter details from the contract
@@ -62,9 +93,9 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
       
       return {
         address: voterAddress,
-        isRegistered: voterData[0],
-        hasVoted: voterData[1],
-        votedProposalId: Number(voterData[2])
+        isRegistered: voterData.isRegistered,
+        hasVoted: voterData.hasVoted,
+        votedProposalId: Number(voterData.votedProposalId)
       };
     } catch (error) {
       console.error(`Error fetching voter ${voterAddress}:`, error);
@@ -82,8 +113,46 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
       const voters = await Promise.all(voterRegisteredEvents.map(fetchVoterDetails));
       setVoters(voters);
     };
-    fetchVoters();
-  }, [voterRegisteredEvents]);
+    if (voterRegisteredEvents.length > 0) fetchVoters();
+  }, [voterRegisteredEvents, fetchVoterDetails]);
+
+  useEffect(() => {
+    const fetchProposals = async () => {
+      const proposals = await Promise.all(proposalAddedEvents.map(fetchProposalDetails));
+      setProposals(proposals);
+    };
+    fetchProposals();
+  }, [proposalAddedEvents]);
+
+  /**
+   * Fetch the proposal details from the contract
+   * @param {number} proposalId The id of the proposal
+   * @returns {Promise<Proposal>} The proposal details
+  */
+  const fetchProposalDetails = useCallback(async (proposalId: number): Promise<Proposal> => {
+    try {
+      const proposalData = await publicClient.readContract({
+        address: contractAddress,
+        abi: contractABI,
+        functionName: 'getOneProposal',
+        args: [proposalId],
+        account: address,
+      }) as any;
+      
+      return {
+        id: proposalId,
+        description: proposalData.description,
+        voteCount: proposalData.voteCount
+      };
+    } catch (error) {
+      console.error(`Error fetching proposal ${proposalId}:`, error);
+      return {
+        id: proposalId,
+        description: 'error',
+        voteCount: 0
+      };
+    }
+  }, [address]);
 
   /** 
    * Write a contract function
@@ -92,7 +161,7 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
    * @returns {Promise<void>} The promise of the transaction
   */
   const write = async (functionName: string, args: any[] = []) => {
-    writeContract({
+    return writeContract({
       address: contractAddress,
       abi: contractABI,
       functionName,
@@ -122,7 +191,16 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
    * @returns {Promise<void>} The promise of the transaction
   */
   const addVoter = async (voter: string) => {
-    write('addVoter', [voter])
+    return write('addVoter', [voter])
+  }
+
+  /**
+   * Add a proposal to the contract
+   * @param {string} proposal The proposal
+   * @returns {Promise<void>} The promise of the transaction
+  */
+  const addProposal = async (proposal: string) => {
+    return write('addProposal', [proposal])
   }
 
   /**
@@ -132,6 +210,8 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
   const refetch = async () => {
     await refetchWorkflow();
     await refetchVoterEvents();
+    await refetchProposalEvents();
+    await fetchCurrentUserVoteInfo();
   };
 
   /**
@@ -143,12 +223,26 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
   }, [contractOwner, address]);
 
   /**
+   * Check if the user is a voter
+   * @returns {boolean} True if the user is a voter, false otherwise
+  */
+  const isVoter = useCallback(() => {
+    return voters.some((v) => v.address === address);
+  }, [voters, address]);
+
+  /**
    * Check if the contract is ready to tally
    * @returns {boolean} True if the contract is ready to tally, false otherwise
   */
   const readyToTally = useCallback(() => {
     return workflowStatus === 4;
   }, [workflowStatus]);
+
+  useEffect(() => {
+    if (address) {
+      fetchCurrentUserVoteInfo();
+    }
+  }, [address, fetchCurrentUserVoteInfo]);
 
   // Refetch when transaction is confirmed
   useEffect(() => {
@@ -167,13 +261,17 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     workflowStatus,
     workflowIsPending,
     voters,
+    proposals,
     refetchWorkflow,
     write,
     refetch,
     changeStatus,
     isOwner,
+    isVoter,
     readyToTally,
     addVoter,
+    addProposal,
+    currentUserVoteInfo,
   };
 
   return (
