@@ -27,7 +27,7 @@ import AddVoterDialog from './AddVoterDialog';
 import { Voter } from '@/lib/types/voter';
 
 function VotersTable() {
-  const { isOwner, workflowStatus, voters } = useContract();
+  const { isOwner, workflowStatus, voters, UnAuthorized } = useContract();
   const [sorting, setSorting] = useState<SortingState>([]);
 
 
@@ -126,12 +126,19 @@ function VotersTable() {
                     </TableRow>
                   ))
                 ) : (
+                  UnAuthorized() ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center">
+                      Can't access voters list
+                    </TableCell>
+                  </TableRow>
+                ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="text-center">
                       No voters found.
                     </TableCell>
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>

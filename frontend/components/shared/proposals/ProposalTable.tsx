@@ -29,7 +29,7 @@ import { useAccount } from 'wagmi';
 import { Voter } from '@/lib/types/voter';
 
 function ProposalTable() {
-  const { write, isVoter, workflowStatus, proposals: proposalsFromContext, currentUserVoteInfo } = useContract();
+  const { write, isVoter, workflowStatus, proposals: proposalsFromContext, currentUserVoteInfo, UnAuthorized } = useContract();
   const proposals: Proposal[] = proposalsFromContext || [];
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -39,6 +39,8 @@ function ProposalTable() {
   ]);
   const [loading, setLoading] = useState(true);
   const [totalProposals, setTotalProposals] = useState(0);
+
+  console.log(currentUserVoteInfo);
 
   const columns: ColumnDef<Proposal>[] = [
     {
@@ -75,20 +77,18 @@ function ProposalTable() {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="text-right">{String(row.getValue('voteCount'))}</div>,
+      cell: ({ row }) => {
+        return <div className="text-right">{String(row.getValue('voteCount'))}</div>;
+      }
     },
     {
       id: 'actions',
       cell: ({ row }) => {
-        if (workflowStatus === 3 && isVoter()) {
-          if (currentUserVoteInfo.votedProposalId === row.original.id) {
-            return <div className="text-sm font-bold text-secondary bg-[var(--accent-secondary)] rounded-full"><Check className="h-4 w-4" /></div>;
-          } 
+        if (currentUserVoteInfo?.hasVoted && currentUserVoteInfo.votedProposalId === Number(row.original.id)) {
+          return <div className="flex items-center justify-center gap-1 text-center font-bold text-secondary bg-[var(--accent-secondary)] rounded-full w-fit px-3 py-1"><Check className="h-4 w-4" /> Voted</div>;
+        }
 
-          if (currentUserVoteInfo.hasVoted) {
-            return null;
-          }
-
+        if (workflowStatus === 3 && isVoter() && !currentUserVoteInfo?.hasVoted) {
           return (
               <Button 
                 size="sm" 
@@ -100,6 +100,7 @@ function ProposalTable() {
               </Button>
             );
         }
+
         return null;
       }
     }
@@ -186,7 +187,11 @@ function ProposalTable() {
                         <TableRow 
                           key={row.id}
                           className={cn(
-                            { "bg-muted/50": hasVotedForThis && !isWinner }
+                            "transition-colors",
+                            { 
+                              "bg-[var(--accent-secondary)]/20 border-[var(--accent-secondary)]/30": hasVotedForThis,
+                              "bg-muted/50": !isWinner && !hasVotedForThis
+                            }
                           )}
                         >
                           {row.getVisibleCells().map((cell) => (
@@ -199,9 +204,15 @@ function ProposalTable() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={columns.length} className="text-center">
-                        No proposals found.
-                      </TableCell>
+                      {UnAuthorized() ? (
+                        <TableCell colSpan={columns.length} className="text-center">
+                          Can't access proposals list
+                        </TableCell>
+                      ) : (
+                        <TableCell colSpan={columns.length} className="text-center">
+                          No proposals found.
+                        </TableCell>
+                      )}
                     </TableRow>
                   )}
                 </TableBody>

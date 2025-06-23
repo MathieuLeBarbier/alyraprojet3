@@ -108,8 +108,39 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [address]);
 
+    /**
+   * Fetch the proposal details from the contract
+   * @param {number} proposalId The id of the proposal
+   * @returns {Promise<Proposal>} The proposal details
+  */
+    const fetchProposalDetails = useCallback(async (proposalId: number): Promise<Proposal> => {
+      try {
+        const proposalData = await publicClient.readContract({
+          address: contractAddress,
+          abi: contractABI,
+          functionName: 'getOneProposal',
+          args: [proposalId],
+          account: address,
+        }) as any;
+        
+        return {
+          id: proposalId,
+          description: proposalData.description,
+          voteCount: proposalData.voteCount
+        };
+      } catch (error) {
+        console.error(`Error fetching proposal ${proposalId}:`, error);
+        return {
+          id: proposalId,
+          description: 'error',
+          voteCount: 0
+        };
+      }
+    }, [address]);
+
   useEffect(() => {
     const fetchVoters = async () => {
+      if (UnAuthorized()) return;
       const voters = await Promise.all(voterRegisteredEvents.map(fetchVoterDetails));
       setVoters(voters);
     };
@@ -118,41 +149,12 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchProposals = async () => {
+      if (UnAuthorized()) return;
       const proposals = await Promise.all(proposalAddedEvents.map(fetchProposalDetails));
       setProposals(proposals);
     };
     fetchProposals();
   }, [proposalAddedEvents]);
-
-  /**
-   * Fetch the proposal details from the contract
-   * @param {number} proposalId The id of the proposal
-   * @returns {Promise<Proposal>} The proposal details
-  */
-  const fetchProposalDetails = useCallback(async (proposalId: number): Promise<Proposal> => {
-    try {
-      const proposalData = await publicClient.readContract({
-        address: contractAddress,
-        abi: contractABI,
-        functionName: 'getOneProposal',
-        args: [proposalId],
-        account: address,
-      }) as any;
-      
-      return {
-        id: proposalId,
-        description: proposalData.description,
-        voteCount: proposalData.voteCount
-      };
-    } catch (error) {
-      console.error(`Error fetching proposal ${proposalId}:`, error);
-      return {
-        id: proposalId,
-        description: 'error',
-        voteCount: 0
-      };
-    }
-  }, [address]);
 
   /** 
    * Write a contract function
@@ -230,6 +232,10 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     return voters.some((v) => v.address === address);
   }, [voters, address]);
 
+  const UnAuthorized = useCallback(() => {
+    return !isVoter() && !isOwner();
+  }, [isVoter, isOwner]);
+
   /**
    * Check if the contract is ready to tally
    * @returns {boolean} True if the contract is ready to tally, false otherwise
@@ -268,6 +274,7 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     changeStatus,
     isOwner,
     isVoter,
+    UnAuthorized,
     readyToTally,
     addVoter,
     addProposal,
