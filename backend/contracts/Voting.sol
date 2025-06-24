@@ -9,7 +9,7 @@ error AlreadyVoter();
 error ProposalNotFound();
 error CannotProposeNothing();
 error AlreadyVoted();
-error InvalidWorkflowStatus(uint256 requiredStatus, uint256 currentStatus);
+error InvalidWorkflowStatus(uint8 requiredStatus, uint8 currentStatus);
 
 /// @title Voting Smart Contract
 /// @author Alyra - Promo Berners-Lee
@@ -70,7 +70,7 @@ contract Voting is Ownable {
     /// @param _addr The address of the voter
     /// @dev Only the owner can add a voter
     function addVoter(address _addr) external onlyOwner {
-        require(workflowStatus == WorkflowStatus.RegisteringVoters, InvalidWorkflowStatus(WorkflowStatus.RegisteringVoters, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.RegisteringVoters, InvalidWorkflowStatus(uint8(WorkflowStatus.RegisteringVoters), uint8(workflowStatus)));
         require(voters[_addr].isRegistered != true, AlreadyVoter());
     
         voters[_addr].isRegistered = true;
@@ -81,7 +81,7 @@ contract Voting is Ownable {
     /// @param _desc The description of the proposal
     /// @dev Only voters are allowed to add a proposal
     function addProposal(string calldata _desc) external onlyVoters {
-        require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, InvalidWorkflowStatus(WorkflowStatus.ProposalsRegistrationStarted, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, InvalidWorkflowStatus(uint8(WorkflowStatus.ProposalsRegistrationStarted), uint8(workflowStatus)));
         require(keccak256(abi.encode(_desc)) != keccak256(abi.encode("")), CannotProposeNothing());
 
         Proposal memory proposal;
@@ -94,7 +94,7 @@ contract Voting is Ownable {
     /// @param _id The id of the proposal
     /// @dev Only voters are allowed to vote
     function setVote( uint _id) external onlyVoters {
-        require(workflowStatus == WorkflowStatus.VotingSessionStarted, InvalidWorkflowStatus(WorkflowStatus.VotingSessionStarted, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.VotingSessionStarted, InvalidWorkflowStatus(uint8(WorkflowStatus.VotingSessionStarted), uint8(workflowStatus)));
         require(voters[msg.sender].hasVoted != true, AlreadyVoted());
         require(_id < proposalsArray.length, ProposalNotFound());
 
@@ -113,7 +113,7 @@ contract Voting is Ownable {
     }
 
     function startProposalsRegistering() external onlyOwner {
-        require(workflowStatus == WorkflowStatus.RegisteringVoters, InvalidWorkflowStatus(WorkflowStatus.RegisteringVoters, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.RegisteringVoters, InvalidWorkflowStatus(uint8(WorkflowStatus.RegisteringVoters), uint8(workflowStatus)));
         workflowStatus = WorkflowStatus.ProposalsRegistrationStarted;
         
         Proposal memory proposal;
@@ -124,19 +124,19 @@ contract Voting is Ownable {
     }
 
     function endProposalsRegistering() external onlyOwner {
-        require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, InvalidWorkflowStatus(WorkflowStatus.ProposalsRegistrationStarted, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.ProposalsRegistrationStarted, InvalidWorkflowStatus(uint8(WorkflowStatus.ProposalsRegistrationStarted), uint8(workflowStatus)));
         workflowStatus = WorkflowStatus.ProposalsRegistrationEnded;
         emit WorkflowStatusChange(WorkflowStatus.ProposalsRegistrationStarted, WorkflowStatus.ProposalsRegistrationEnded);
     }
 
     function startVotingSession() external onlyOwner {
-        require(workflowStatus == WorkflowStatus.ProposalsRegistrationEnded, InvalidWorkflowStatus(WorkflowStatus.ProposalsRegistrationEnded, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.ProposalsRegistrationEnded, InvalidWorkflowStatus(uint8(WorkflowStatus.ProposalsRegistrationEnded), uint8(workflowStatus)));
         workflowStatus = WorkflowStatus.VotingSessionStarted;
         emit WorkflowStatusChange(WorkflowStatus.ProposalsRegistrationEnded, WorkflowStatus.VotingSessionStarted);
     }
 
     function endVotingSession() external onlyOwner {
-        require(workflowStatus == WorkflowStatus.VotingSessionStarted, InvalidWorkflowStatus(WorkflowStatus.VotingSessionStarted, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.VotingSessionStarted, InvalidWorkflowStatus(uint8(WorkflowStatus.VotingSessionStarted), uint8(workflowStatus)));
         workflowStatus = WorkflowStatus.VotingSessionEnded;
         emit WorkflowStatusChange(WorkflowStatus.VotingSessionStarted, WorkflowStatus.VotingSessionEnded);
     }
@@ -144,7 +144,7 @@ contract Voting is Ownable {
     /// @notice Tally the votes
     /// @dev Only the owner can tally the votes
     function tallyVotes() external onlyOwner {
-        require(workflowStatus == WorkflowStatus.VotingSessionEnded, InvalidWorkflowStatus(WorkflowStatus.VotingSessionEnded, uint256(workflowStatus)));
+        require(workflowStatus == WorkflowStatus.VotingSessionEnded, InvalidWorkflowStatus(uint8(WorkflowStatus.VotingSessionEnded), uint8(workflowStatus)));
         uint _winningProposalId;
 
         // TODO: Issue 1 - This function would not verify the winner but will officially set the winner.
