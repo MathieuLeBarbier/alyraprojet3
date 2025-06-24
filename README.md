@@ -36,10 +36,20 @@ A decentralized voting application built with Next.js, Solidity and RainbowKit.
 2. Start Blockchain & Deploy Contract
 ```sh
 cd backend
+npm install
+
 npx hardhat node #Run on a separate terminal
 
 # Command to deploy contract locally
 npx hardhat ignition deploy ./ignition/modules/Voting.ts --network localhost
+```
+
+3. Start the Frontend Application
+```sh
+cd frontend
+npm install
+
+npm run dev
 ```
 
 
