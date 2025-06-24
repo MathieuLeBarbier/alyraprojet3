@@ -25,11 +25,9 @@ import { useContract } from '@/contexts/useContract';
 import { cn } from '@/lib/utils';
 import AddProposalDialog from './AddProposalDialog';
 import { Proposal } from '@/lib/types/proposal';
-import { useAccount } from 'wagmi';
-import { Voter } from '@/lib/types/voter';
 
 function ProposalTable() {
-  const { write, isVoter, workflowStatus, proposals: proposalsFromContext, currentUserVoteInfo, UnAuthorized } = useContract();
+  const { vote, isVoter, workflowStatus, proposals: proposalsFromContext, currentUserVoteInfo, UnAuthorized } = useContract();
   const proposals: Proposal[] = proposalsFromContext || [];
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -39,8 +37,6 @@ function ProposalTable() {
   ]);
   const [loading, setLoading] = useState(true);
   const [totalProposals, setTotalProposals] = useState(0);
-
-  console.log(currentUserVoteInfo);
 
   const columns: ColumnDef<Proposal>[] = [
     {
@@ -108,7 +104,7 @@ function ProposalTable() {
 
   const handleVote = async (proposalId: number) => {
     try {
-      await write('setVote', [proposalId]);
+      await vote(proposalId);
 
     } catch (err) {
       console.error("Failed to vote:", err);
@@ -127,7 +123,6 @@ function ProposalTable() {
     },
   });
 
-  // Update total proposals count when proposals change
   useEffect(() => {
     setTotalProposals(proposals?.length || 0);
     setLoading(false);
@@ -181,16 +176,12 @@ function ProposalTable() {
                         Number(row.original.voteCount) === Math.max(...proposals.map((p: Proposal) => Number(p.voteCount))) &&
                         row.original.voteCount > 0;
 
-                      const hasVotedForThis = currentUserVoteInfo?.hasVoted && currentUserVoteInfo.votedProposalId === row.original.id;
-                      
                       return (
                         <TableRow 
                           key={row.id}
                           className={cn(
-                            "transition-colors",
                             { 
-                              "bg-[var(--accent-secondary)]/20 border-[var(--accent-secondary)]/30": hasVotedForThis,
-                              "bg-muted/50": !isWinner && !hasVotedForThis
+                              "bg-[var(--accent-secondary)] text-secondary font-bold hover:bg-[var(--accent-secondary)]/80": isWinner,
                             }
                           )}
                         >

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 const Header = () => {
-  const { workflowStatus, workflowIsPending, isOwner, changeStatus, readyToTally } = useContract();
+  const { workflowStatus, workflowIsPending, isOwner, changeStatus, readyToTally, tally } = useContract();
   const { hidden } = useHiddenNav();
 
   return (
@@ -22,11 +22,11 @@ const Header = () => {
           <div className="text-secondary font-bold text-sm bg-primary px-3 py-1 rounded-full">
               {`Status: ${workflowIsPending ? 'Loading...' : getWorkflowStatusName(Number(workflowStatus))}`}
           </div>
-          { isOwner() && (
+          { isOwner() && workflowStatus !== 5 && (
             <Button 
             size="sm" 
             className="rounded-full bg-[var(--accent-secondary)] text-secondary" 
-            onClick={() => changeStatus()}
+            onClick={() => readyToTally() ? tally() : changeStatus()}
             disabled={workflowIsPending}
             >
               {readyToTally() ? 'Tally' : 'Next'}

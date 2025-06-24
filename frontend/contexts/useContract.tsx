@@ -206,6 +206,23 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   /**
+   * Vote for a proposal
+   * @param {number} proposalId The id of the proposal
+   * @returns {Promise<void>} The promise of the transaction
+  */
+  const vote = async (proposalId: number) => {
+    return write('setVote', [proposalId])
+  }
+
+  /**
+   * Tally the votes
+   * @returns {Promise<void>} The promise of the transaction
+  */
+  const tally = async () => {
+    return write('tallyVotes')
+  }
+
+  /**
    * Refetch the contract data
    * @returns {Promise<void>} The promise of the refetch
   */
@@ -244,6 +261,9 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     return workflowStatus === 4;
   }, [workflowStatus]);
 
+  /**
+   * Fetch the current user voting info
+  */
   useEffect(() => {
     if (address) {
       fetchCurrentUserVoteInfo();
@@ -278,6 +298,8 @@ const ContractProvider = ({ children }: { children: React.ReactNode }) => {
     readyToTally,
     addVoter,
     addProposal,
+    vote,
+    tally,
     currentUserVoteInfo,
   };
 
