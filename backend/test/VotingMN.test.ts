@@ -89,7 +89,7 @@ describe("Voting", function () {
       const { voting, voter1 } = await loadFixture(deployVotingFixtureWith1Voter);
       await expect(
         voting.addVoter(voter1.address)
-      ).to.be.revertedWith('Already registered');
+      ).to.be.revertedWithCustomError(voting, "AlreadyVoter");
     })
 
     it("Should revert when add voter in wrong state (Status != RegisteringVoters)", async function () {
@@ -97,7 +97,7 @@ describe("Voting", function () {
       await voting.startProposalsRegistering();
       await expect(
         voting.addVoter(account1.address)
-      ).to.be.revertedWith('Voters registration is not open yet');
+      ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     })
 
     it("Should emit event: VoterRegistered", async function () {
@@ -143,7 +143,7 @@ describe("Voting", function () {
     it("Should revert when add proposal with empty description", async function () {
       await expect(
         voting.connect(voter1).addProposal("")
-      ).to.be.revertedWith("Vous ne pouvez pas ne rien proposer");
+      ).to.be.revertedWithCustomError(voting, "CannotProposeNothing");
     })
 
     it("Should emit event: ProposalRegistered", async function() {
@@ -164,7 +164,7 @@ describe("Voting", function () {
 
       await expect(
         voting.connect(voter1).addProposal("Proposal 1")
-      ).to.be.revertedWith("Proposals are not allowed yet");
+      ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     })
   })
 
@@ -197,13 +197,13 @@ describe("Voting", function () {
       await voting.connect(voter1).setVote(1);
       await expect(
         voting.connect(voter1).setVote(1)
-      ).to.be.revertedWith("You have already voted");
+      ).to.be.revertedWithCustomError(voting, "AlreadyVoted");
     })
     
     it("Should revert when voting for invalid proposal", async function () {
       await expect(
         voting.connect(voter2).setVote(100)
-      ).to.be.revertedWith("Proposal not found");
+      ).to.be.revertedWithCustomError(voting, "ProposalNotFound");
     })
 
     it("Should revert when voting in wrong state (Status != VotingSessionStarted)", async function () {
@@ -211,7 +211,7 @@ describe("Voting", function () {
 
       await expect(
         voting.connect(voter1).setVote(1)
-      ).to.be.revertedWith("Voting session havent started yet");
+      ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     })
 
     it("Should emit event: Voted", async function () {
@@ -253,7 +253,7 @@ describe("Voting", function () {
     it("Should revert when tallying votes in wrong state (Status != VotingSessionEnded)", async function () {
       await expect(
         voting.tallyVotes()
-      ).to.be.revertedWith("Current status is not voting session ended");
+      ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     })
 
     it("Should emit event: WorkflowStatusChange", async function () {
@@ -292,7 +292,7 @@ describe("Voting", function () {
         await voting.startProposalsRegistering();
         await expect(
           voting.startProposalsRegistering()
-        ).to.be.revertedWith("Registering proposals cant be started now");
+        ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
       })
 
       it("Should emit event: WorkflowStatusChange", async function () {
@@ -325,7 +325,7 @@ describe("Voting", function () {
         await voting.endProposalsRegistering();
         await expect(
           voting.endProposalsRegistering()
-        ).to.be.revertedWith("Registering proposals havent started yet");
+        ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
       })
 
       it("Should emit event: WorkflowStatusChange", async function () {
@@ -352,7 +352,7 @@ describe("Voting", function () {
         await voting.startVotingSession();
         await expect(
           voting.startVotingSession()
-        ).to.be.revertedWith("Registering proposals phase is not finished");
+        ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
       })
 
       it("Should emit event: WorkflowStatusChange", async function () {
@@ -380,7 +380,7 @@ describe("Voting", function () {
         await voting.endVotingSession();
         await expect(
           voting.endVotingSession()
-        ).to.be.revertedWith("Voting session havent started yet");
+        ).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
       })
 
       it("Should emit event: WorkflowStatusChange", async function () {
@@ -409,25 +409,25 @@ describe("Voting", function () {
     it("Get voter should revert if not allowed voter", async function () {
       await expect(
         voting.connect(owner).getVoter(voter1.address)
-      ).to.be.revertedWith("You're not a voter");
+      ).to.be.revertedWithCustomError(voting, "NotVoter");
     })
 
     it("Get proposal should revert if not allowed voter", async function () {
       await expect(
         voting.connect(owner).getOneProposal(0)
-      ).to.be.revertedWith("You're not a voter");
+      ).to.be.revertedWithCustomError(voting, "NotVoter");
     })
 
     it("Add proposal should revert if not allowed voter", async function () {
       await expect(
         voting.connect(owner).addProposal("Proposal 1")
-      ).to.be.revertedWith("You're not a voter");
+      ).to.be.revertedWithCustomError(voting, "NotVoter");
     })
 
     it("Set vote should revert if not allowed voter", async function () {
       await expect(
         voting.connect(owner).setVote(0)
-      ).to.be.revertedWith("You're not a voter");
+      ).to.be.revertedWithCustomError(voting, "NotVoter");
     })
   });
 

@@ -1,7 +1,5 @@
 # Voting Dapp (Project 3 Alyra)
 
-# Voting Dapp
-
 A decentralized voting application built with Next.js, Solidity and RainbowKit.
 
 ## Features

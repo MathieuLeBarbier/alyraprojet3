@@ -2,16 +2,16 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { PANIC_CODES } = require("@nomicfoundation/hardhat-chai-matchers/panic");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-
+const { ethers } = require("hardhat");
 
 
 describe("Voting contract", function () {
   const DEFAULT_PROPOSAL = "Proposal 1";
   const DEFAULT_PROPOSAL_ID = 1;
-  let owner;
-  let voter1;
-  let voter2;
-  let voter3;
+  let owner: any;
+  let voter1: any;
+  let voter2: any;
+  let voter3: any;
   let voting: any;
 
   before(async function () {
@@ -36,7 +36,7 @@ describe("Voting contract", function () {
   /**
    * I use a method to set voting in the right state here, a fixture wouldn't make sense as I don't make any change on blockchain state
    */
-  async function _setVotingInGivenStatus(ws) {
+  async function _setVotingInGivenStatus(ws: number) {
     if (ws >= WorkflowStatus.ProposalsRegistrationStarted) {
       await _setVotingToStartProposal();
     }
@@ -84,7 +84,7 @@ describe("Voting contract", function () {
     });
 
     it("Should fail trying to get a proposal without being a voter", async function () {
-      await expect(voting.getOneProposal(1)).to.be.rejectedWith("You're not a voter");
+      await expect(voting.getOneProposal(1)).to.be.revertedWithCustomError(voting, "NotVoter");
     });
   });
 
@@ -100,7 +100,7 @@ describe("Voting contract", function () {
     });
 
     it("Should fail trying to get a voter without being a voter", async function () {
-      await expect(voting.getVoter(voter1)).to.be.revertedWith("You're not a voter");
+      await expect(voting.getVoter(voter1)).to.be.revertedWithCustomError(voting, "NotVoter");
     });
   });
 
@@ -115,13 +115,13 @@ describe("Voting contract", function () {
     it("Should fail trying to add an already registered voter", async function () {
       await voting.addVoter(voter1);
 
-      await expect(voting.addVoter(voter1)).to.be.revertedWith("Already registered");
+      await expect(voting.addVoter(voter1)).to.be.revertedWithCustomError(voting, "AlreadyVoter");
     });
 
     it("Should fail trying to add a voter in the wrong wworkflow status", async function () {
       await _setVotingInGivenStatus(WorkflowStatus.ProposalsRegistrationStarted);
 
-      await expect(voting.addVoter(voter2)).to.be.revertedWith("Voters registration is not open yet");
+      await expect(voting.addVoter(voter2)).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to add a voter without being the owner", async function () {
@@ -147,16 +147,16 @@ describe("Voting contract", function () {
     });
 
     it("Should fail trying to add an empty proposal", async function () {
-      await expect(voting.connect(voter1).addProposal("")).to.be.revertedWith("Vous ne pouvez pas ne rien proposer");
+      await expect(voting.connect(voter1).addProposal("")).to.be.revertedWithCustomError(voting, "CannotProposeNothing");
     });
 
     it("Should fail trying to add a proposal in the wrong workflow status", async function () {
       await voting.endProposalsRegistering();
-      await expect(voting.connect(voter1).addProposal("New proposal")).to.be.revertedWith("Proposals are not allowed yet");
+      await expect(voting.connect(voter1).addProposal("New proposal")).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to add a proposal without being voter", async function () {
-      await expect(voting.addProposal("New proposal")).to.be.revertedWith("You're not a voter");
+      await expect(voting.addProposal("New proposal")).to.be.revertedWithCustomError(voting, "NotVoter");
     });
 
     it("Should emit an event when adding a proposal", async function () {
@@ -178,22 +178,22 @@ describe("Voting contract", function () {
     });
 
     it("Should fail trying to vote for a non existing proposal", async function () {
-      await expect(voting.connect(voter1).setVote(42424242)).to.be.revertedWith("Proposal not found");
+      await expect(voting.connect(voter1).setVote(42424242)).to.be.revertedWithCustomError(voting, "ProposalNotFound");
     });
 
     it("Should fail trying to vote in a wrong workflow status", async function () {
       await voting.endVotingSession();
-      await expect(voting.connect(voter1).setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWith("Voting session havent started yet");
+      await expect(voting.connect(voter1).setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to vote twice", async function () {
       await voting.connect(voter1).setVote(DEFAULT_PROPOSAL_ID);
 
-      await expect(voting.connect(voter1).setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWith("You have already voted");
+      await expect(voting.connect(voter1).setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWithCustomError(voting, "AlreadyVoted");
     });
 
     it("Should fail trying to vote without being a voter", async function () {
-      await expect(voting.setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWith("You're not a voter");
+      await expect(voting.setVote(DEFAULT_PROPOSAL_ID)).to.be.revertedWithCustomError(voting, "NotVoter");
     });
 
     it("Should emit an event when voting", async function () {
@@ -213,7 +213,7 @@ describe("Voting contract", function () {
     it("Should fail trying to start proposal time in wrong workflow status", async function () {
       await _setVotingInGivenStatus(WorkflowStatus.ProposalsRegistrationEnded);
 
-      await expect(voting.startProposalsRegistering()).to.be.revertedWith("Registering proposals cant be started now");
+      await expect(voting.startProposalsRegistering()).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to start proposal time without being owner", async function () {
@@ -242,7 +242,7 @@ describe("Voting contract", function () {
 
     it("Should fail trying to end proposal time in wrong workflow status", async function () {
       await voting.endProposalsRegistering(); // Calling it twice to be in wrong current status on 2nd try
-      await expect(voting.endProposalsRegistering()).to.be.revertedWith("Registering proposals havent started yet");
+      await expect(voting.endProposalsRegistering()).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to end proposal time without being owner", async function () {
@@ -271,7 +271,7 @@ describe("Voting contract", function () {
 
     it("Should fail trying to start voting session in wrong workflow status", async function () {
       await voting.startVotingSession(); // Calling it twice to be in wrong current status on 2nd try
-      await expect(voting.startVotingSession()).to.be.revertedWith("Registering proposals phase is not finished");
+      await expect(voting.startVotingSession()).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should fail trying to start voting session without being owner", async function () {
@@ -300,7 +300,7 @@ describe("Voting contract", function () {
 
     it("Should fail trying to end voting session in wrong workflow status", async function () {
       await voting.endVotingSession(); // Calling it twice to be in wrong current status on 2nd try
-      await expect(voting.endVotingSession()).to.be.revertedWith("Voting session havent started yet");
+      await expect(voting.endVotingSession()).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Shoud fail trying to end voting session without being owner", async function () {
@@ -373,7 +373,7 @@ describe("Voting contract", function () {
     });
 
     it("Should fail trying to tally votes in wrong workflow status", async function () {
-      await expect(voting.tallyVotes()).to.be.revertedWith("Current status is not voting session ended");
+      await expect(voting.tallyVotes()).to.be.revertedWithCustomError(voting, "InvalidWorkflowStatus");
     });
 
     it("Should emit an event when tallying votes", async function () {
