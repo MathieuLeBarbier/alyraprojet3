@@ -1,6 +1,6 @@
 # Voting Dapp (Project 3 Alyra)
 
-A decentralized voting application built with Next.js, Solidity and RainbowKit.
+A decentralized voting application built with Solidity & NextJS
 
 ## Features
 
@@ -38,7 +38,8 @@ A decentralized voting application built with Next.js, Solidity and RainbowKit.
 cd backend
 npm install
 
-npx hardhat node #Run on a separate terminal
+ #Run on a separate terminal
+npx hardhat node
 
 # Command to deploy contract locally
 npx hardhat ignition deploy ./ignition/modules/Voting.ts --network localhost
@@ -49,7 +50,12 @@ npx hardhat ignition deploy ./ignition/modules/Voting.ts --network localhost
 cd frontend
 npm install
 
+ #Run on a separate terminal
 npm run dev
 ```
-
+## TODOs
+- Fix the problem with the number of proposals when tallied (Loop) 
+- Transaction error handling in the front
+- Deploy contract on testnet like Sepolia or Holesky
+- Deploy front application to Vercel
 
