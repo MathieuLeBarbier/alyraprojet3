@@ -8,6 +8,15 @@ Try running some of the following tasks:
 npx hardhat help
 npx hardhat test
 REPORT_GAS=true npx hardhat test
+```
+#### Deploy
+See ```hardhat.config.ts``` for available network
+```shell
+npx hardhat ignition deploy ignition/modules/Voting.ts --network <NETWORK>
+npx hardhat run ./scripts/deploy.ts --network <NETWORK>
+```
+
+#### Start local blockchain
+```shell
 npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Voting.ts --network localhost
 ```

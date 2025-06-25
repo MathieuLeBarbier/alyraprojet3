@@ -3,13 +3,13 @@
 import '@rainbow-me/rainbowkit/styles.css';
 import {getDefaultConfig, RainbowKitProvider, darkTheme} from '@rainbow-me/rainbowkit';
 import { WagmiProvider } from 'wagmi';
-import { hardhat, sepolia } from 'wagmi/chains';
+import { hardhat, sepolia, holesky } from 'wagmi/chains';
 import {QueryClientProvider, QueryClient} from "@tanstack/react-query";
 
 const config = getDefaultConfig({
   appName: 'Voting DApp',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
-  chains: [hardhat, sepolia], 
+  chains: [hardhat, sepolia, holesky], 
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
 

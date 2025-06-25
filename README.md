@@ -27,30 +27,38 @@ A decentralized voting application built with Solidity & NextJS
 - npm or yarn
 - MetaMask wallet
 
-### Installation
 
-1. Clone the repository
+### Environment
 
-#### Local Environment
-
-2. Start Blockchain & Deploy Contract
+#### 2. Smart Contract (Backend)
+##### 2.1 - Start Local Blockchain & Deploy Contract
 ```sh
 cd backend
 npm install
 
- #Run on a separate terminal
+#Run on a separate terminal
 npx hardhat node
 
-# Command to deploy contract locally
-npx hardhat ignition deploy ./ignition/modules/Voting.ts --network localhost
+# Deploy contract locally
+npx hardhat run ./scripts/deploy.ts --network localhost
 ```
 
-3. Start the Frontend Application
+##### 2.1 Deploy to Public Testnet
+See ```backend/hardhat.config.ts``` for available network
+```sh
+npx hardhat run ./scripts/deploy.ts --network sepolia
+npx hardhat run ./scripts/deploy.ts --network holesky
+```
+
+##### Deployed Contracts
+Sepolia Address: [0x9fBAe69250C23283A3E72e161bbe68D1806CDd27](https://sepolia.etherscan.io/address/0x9fBAe69250C23283A3E72e161bbe68D1806CDd27)
+Holesky Address: [0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207](https://holesky.etherscan.io/address/0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207)
+
+
+#### 3. NextJS Frontend Application
 ```sh
 cd frontend
 npm install
-
- #Run on a separate terminal
 npm run dev
 ```
 ## TODOs
