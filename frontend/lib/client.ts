@@ -13,7 +13,9 @@ Un objet qui représente la chaîne Hardhat, utilisée pour le développement
 et le test de contrats intelligents localement avant leur déploiement sur une chaîne publique.
 */
 import { createPublicClient, http } from 'viem'
-import { hardhat } from 'viem/chains'
+import { getNetworkConfig } from './networkConfig'
+
+const { defaultChain, rpcUrl } = getNetworkConfig()
 
 /**
  * Create a public client to interact with the blockchain
@@ -21,6 +23,6 @@ import { hardhat } from 'viem/chains'
  * @returns {Object} The public client
  */
 export const publicClient = createPublicClient({ 
-  chain: hardhat,
-  transport: http()
+  chain: defaultChain,
+  transport: http(rpcUrl)
 })

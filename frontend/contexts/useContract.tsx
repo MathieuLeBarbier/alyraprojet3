@@ -6,7 +6,7 @@ import { contractAddress, contractABI } from "@/app/constants/index";
 import useContractEvent from "@/hooks/useContractEvent";
 import { Voter } from "@/lib/types/voter";
 import { Proposal } from "@/lib/types/proposal";
-import { publicClient } from "@/utils/client";
+import { publicClient } from "@/lib/client";
 
 const ContractContext = createContext<any>(null);
 

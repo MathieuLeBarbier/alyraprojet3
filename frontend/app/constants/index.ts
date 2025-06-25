@@ -1,4 +1,8 @@
-export const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "") as `0x${string}`
+import { getNetworkConfig } from "@/lib/networkConfig";
+
+const { contractAddress: contractAddressConfig } = getNetworkConfig()
+
+export const contractAddress = contractAddressConfig as `0x${string}`
 export const contractABI = [
   {
     "inputs": [],

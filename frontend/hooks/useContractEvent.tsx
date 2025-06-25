@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { publicClient } from "../utils/client";
+import { publicClient } from "../lib/client";
 import { parseAbiItem, Log } from "viem";
 import { useAccount } from "wagmi";
+import { getNetworkConfig } from "../lib/networkConfig";
 
 /**
  * Use a contract event
@@ -19,6 +20,7 @@ function useContractEvent<T = any>(
 ) {
   const { address } = useAccount();
   const [events, setEvents] = useState<T[]>([]);
+  const { fromBlock } = getNetworkConfig()
 
   /**
    * Get the events from the contract and set the events state
@@ -27,7 +29,7 @@ function useContractEvent<T = any>(
     const numberChangedLog = await publicClient.getLogs({
         address: contractAddr,
         event: parseAbiItem(event) as any,
-        fromBlock: process.env.NEXT_PUBLIC_FROM_BLOCK ? BigInt(process.env.NEXT_PUBLIC_FROM_BLOCK) : BigInt(0),
+        fromBlock: fromBlock,
         toBlock: 'latest',
     })
 
