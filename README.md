@@ -52,6 +52,7 @@ npx hardhat run ./scripts/deploy.ts --network holesky
 
 ##### Deployed Contracts
 Sepolia Address: [0x9fBAe69250C23283A3E72e161bbe68D1806CDd27](https://sepolia.etherscan.io/address/0x9fBAe69250C23283A3E72e161bbe68D1806CDd27)
+
 Holesky Address: [0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207](https://holesky.etherscan.io/address/0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207)
 
 
