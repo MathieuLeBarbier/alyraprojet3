@@ -2,6 +2,8 @@
 
 A decentralized voting application built with Solidity & NextJS
 
+[Try the demo now on Sepolia](https://voting-dapp-alyra-projet3.vercel.app/)
+
 ## Features
 
 - Voter registration
@@ -55,16 +57,14 @@ Sepolia Address: [0x9fBAe69250C23283A3E72e161bbe68D1806CDd27](https://sepolia.et
 
 Holesky Address: [0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207](https://holesky.etherscan.io/address/0x69A244ed5FEcFC6a9CBbcdBb64c02d5E09a1e207)
 
-
 #### 3. NextJS Frontend Application
 ```sh
 cd frontend
 npm install
 npm run dev
 ```
+
 ## TODOs
 - Fix the problem with the number of proposals when tallied (Loop) 
 - Transaction error handling in the front
-- Deploy contract on testnet like Sepolia or Holesky
-- Deploy front application to Vercel
 
